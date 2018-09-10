@@ -1,2 +1,3 @@
 # backend-BIEN
-backend for BIEN visualization app
+
+a [Sails](http://sailsjs.org) application
