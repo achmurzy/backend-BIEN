@@ -1,0 +1,9 @@
+Collecting sqlalchemy
+  Downloading https://files.pythonhosted.org/packages/05/d2/17fb194f4ae83577258ea1d81da3d5d5643f4957fa14fd0261d78d648bf5/SQLAlchemy-1.2.16.tar.gz (5.7MB)
+Building wheels for collected packages: sqlalchemy
+  Running setup.py bdist_wheel for sqlalchemy: started
+  Running setup.py bdist_wheel for sqlalchemy: finished with status 'done'
+  Stored in directory: /home/h4ck3rd4wg/.cache/pip/wheels/71/b5/67/1b1ae0279de6e79ee0d0a4061cdfa0604908e6052046671480
+Successfully built sqlalchemy
+Installing collected packages: sqlalchemy
+Successfully installed sqlalchemy-1.2.13

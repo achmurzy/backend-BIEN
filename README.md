@@ -34,4 +34,41 @@ ALTER DATABASE public_vegbien SET search_path = public,postgis;
 #May need to specify a port number as well
 pg_restore -x -U bien -h localhost -d public_vegbien -n public bien_adb_public.pgd
 
+#Useful commands
+'server.py' is the entry point.
+DON'T FORGET export FLASK_APP=server.py !!!
+python3 server.py
+flask run
 
+Note: We don't plan on performing migrations because we are only reading from the database
+General workflow:
+-Change database representations -> 
+perform a migration: flask db migrate (sometimes push code to production server)  then: flask db upgrade
+
+Undo migration (migrating twice to go backwards is probably not ideal)
+after upgrade: flask db downgrade 
+then delete the obsolete migration script in '/versions', revise your code, and migrate as usual. Obviously, to revert changes, revert your code
+
+MAIN GOALS:
+-Use this skeleton back-end to replicate bien-data.org functionality
+-Build the front-end agnostic to BIEN API representations
+
+TO-DO:
+-Integrate backend functionality with Chamberlain's BIEN API
+
+DONE:
+-Attach BIEN postgresql to Flask
+---Migrate to Flask/SQLAlchemy and a postgres thingy
+-Figure out how to read-only using ORM.
+	-can't reflect database contents into the database connection
+	-Reflect table data to objects (FLASK)
+-construct an ORM representation (initialize an object from a class) based on a query/request from the database (use session.query(class))
+-Set up route for species to query the table class ORM thingy, response as JSON
+
+--Find out how to query occurrences with sqlalchemy based on a species name
+	-Route a species name through the taxon table to get the foreign key species_taxon_id
+
+-Find out how to decorate route function to accept a species name from a request
+	-Properly parse spaces in URLs
+
+-Find out how to bind multiple schema so that we can integrate postgis (used geoalchemy2 as an interface)
