@@ -1,5 +1,16 @@
 # backend-BIEN
 
+MAIN GOALS:
+-Use this skeleton back-end to replicate bien-data.org functionality
+-Build the front-end agnostic to BIEN API representations
+
+TO-DO:
+-Find out how to transfer viewport information inside queries
+	-Use viewport information for PostGIS spatial queries
+-Create routes for political boundaries
+-Create routes for traits
+-Integrate backend functionality with Chamberlain's BIEN API
+
 ## Build Azure database
 az postgres server firewall-rule create --resource-group BIEN --server-name vegbien --start-ip-address=0.0.0.0 --end-ip-address=0.0.0.0 --name AllowAllAzureIPs
   
@@ -48,13 +59,6 @@ perform a migration: flask db migrate (sometimes push code to production server)
 Undo migration (migrating twice to go backwards is probably not ideal)
 after upgrade: flask db downgrade 
 then delete the obsolete migration script in '/versions', revise your code, and migrate as usual. Obviously, to revert changes, revert your code
-
-MAIN GOALS:
--Use this skeleton back-end to replicate bien-data.org functionality
--Build the front-end agnostic to BIEN API representations
-
-TO-DO:
--Integrate backend functionality with Chamberlain's BIEN API
 
 DONE:
 -Attach BIEN postgresql to Flask
