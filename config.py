@@ -2,23 +2,12 @@ import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config(object):
-    DEBUG = False
-    TESTING = False
-    CSRF_ENABLED = True
-    SECRET_KEY = 'this-really-needs-to-be-changed'
-    #SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
-    POSTGRES = {
-        'user': 'bien',
-        'passw': 'bien',
-        'host': 'localhost',
-        'port': '5433',
-        'name': 'vegbien', 
-    }
-    SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://%(user)s:%(passw)s@%(host)s:%(port)s/%(name)s" % POSTGRES
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+        'sqlite:///' + os.path.join(basedir, 'app.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class ProductionConfig(Config):
     DEBUG = False
-
 
 class StagingConfig(Config):
     DEVELOPMENT = True

@@ -11,4 +11,10 @@ dist/
 build/
 *.egg-info/
 
-rnn/data/*
+venv/
+migrations/
+summary/
+
+app.db
+richness.hdf5
+HDR.test_key.pem

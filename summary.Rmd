@@ -1,0 +1,18 @@
+---
+title: "Forecasting summary"
+output: pdf_document
+params:
+  indices: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+
+Average species richness in the area of interest: 
+``` {r, echo = FALSE}
+richness <- read.csv('../HDR_data/richness_present.csv')
+print(mean(richness[params$indices,]$richness, na.rm=TRUE))
+```

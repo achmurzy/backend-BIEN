@@ -1,47 +1,50 @@
 import json
-from sqlalchemy.schema import Table, Column
-from sqlalchemy.types import String, Integer
+from sqlalchemy.ext.declarative import declarative_base
 from geoalchemy2 import Geometry
 
-from server import Base
+from server import db
 
-#This class should be used for declaring models when we need to 
-#include only a subset of information on the table
+Base = declarative_base()
 
-class Taxon(Base):
-    __table__ = Base.metadata.tables['analytical_db_dev.taxon']
+class GridCell(Base):
+    __tablename__ = "gridcell"
+    id = db.Column(db.Integer, primary_key = True)
+    #According to geoalchemy2 this creates a spatial index by default, 
+    #presumably for Spatialite as well if the extension does what it says it does (Wraps spatialite). Check somehow?
+    geom = db.Column(Geometry(geometry_type='POLYGON', management=True)) 
+    forecasts = db.relationship("Forecast")
+    #Including relationships causes database insertions to slow down and eventually fail. 
+    #Either learn how to deal with low-level SQL or master SQLAlchemy
 
-    @property
-    def json(self):
-        return to_json(self, self.__class__)
+class Forecast(Base):
+    __tablename__ = "forecast"
+    id = db.Column(db.Integer, primary_key=True)
+    grid_cell_id = db.Column(db.Integer, db.ForeignKey(GridCell.id))
+    #grid_cell = db.relationship("GridCell", back_populates="forecasts")
 
-class Species(Base):
-	__table__ = Base.metadata.tables['analytical_db_dev.species']
+    val = db.Column(db.Float)
+    year = db.Column(db.Integer)
+    #type = db.Column(db.String(64))    #"Diversity" "Drought" "ForestCover" etc
 
-	@property
-	def json(self):
-		return {
-            'id': self.id,
-            'species': self.species
-        }	
-
-class Occurrence(Base):
-	__table__ = Base.metadata.tables['analytical_db_dev.view_full_occurrence_individual_dev']
-
-	@property
-	def json(self):
-		return {
-            'longitude': self.longitude,
-            'latitude': self.latitude
-        }
-
-class Range(Base):
-    __tablename__ = 'ranges'
-    __table_args__ = {'autoload': True, 'extend_existing': True}
-    geom = Column(Geometry('POLYGON'))
+class Range(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    geo = db.Column(db.String(64))
+    
     @property
     def json(self):
         return {
-            'range': self.geom
+            'id': self.id,
+            'geojson': self.geo
         }
-    
+
+class RasterCSV(db.Model):
+	id = db.Column(db.Integer, primary_key = True)
+	csv = db.Column(db.String(64))  
+
+#This might need to happen elsewhere - i.e. only during initialization
+#Needed for models derived from Base
+#GridCell.__table__.create(db.engine)
+#Forecast.__table__.create(db.engine)
+
+#Covers models derived from (db.)Model
+#db.create_all()
