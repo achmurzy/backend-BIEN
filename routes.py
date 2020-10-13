@@ -13,8 +13,8 @@ import subprocess
 import rpy2.rinterface as rinterface
 from rpy2.rinterface_lib import openrlib
 
-from server import db, app
-from models import Range, GridCell, Forecast
+from server import app
+from models import Range, GridCell, db
 from tasks import celery, SliceTask
 
 from redis_config import r as redis

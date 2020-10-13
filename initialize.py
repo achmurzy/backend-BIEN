@@ -7,7 +7,7 @@ import h5py
 from server import db
 db.engine.connect().execute(select([func.InitSpatialMetaData(1)]))	#Argument '1' handles the spatial indexing as a single transaction (faster, less safe)
 
-from models import GridCell, Forecast, Range, RasterCSV
+from models import GridCell, Range
 GridCell.__table__.create(db.engine)
 db.create_all()
 

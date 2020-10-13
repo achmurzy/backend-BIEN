@@ -1,6 +1,7 @@
 # backend-BIEN
 
 INSTALLATION:
+sudo apt-get update
 sudo apt-get install python3-venv python3-pip
 sudo apt-get install python-celery-common redis-server
 sudo apt-get install libsqlite3-mod-spatialite
@@ -24,3 +25,4 @@ celery -A tasks worker --loglevel=INFO
 
 Azure set-up:
 ssh -i HDR.test_key.pem achmurzy@104.40.87.231
+sudo rsync -uavz -e "ssh -i HDR.test_key.pem" richness.hdf5 achmurzy@104.40.87.231:~
