@@ -3,22 +3,24 @@ from sqlalchemy import and_
 from shapely.geometry import asShape
 from geoalchemy2.shape import from_shape 
 from http import HTTPStatus
-import requests, geojson, random
-
+import requests, geojson
 import numpy as np
 from celery.contrib.abortable import AbortableAsyncResult
 
-from multiprocessing import Process, Pool
 import subprocess
-import rpy2.rinterface as rinterface
-from rpy2.rinterface_lib import openrlib
 
 from server import app
-from models import Range, GridCell, db
-from tasks import celery, SliceTask
+from models import GridCell, db
+from tasks import celery, SliceTask, RPy2Task
 
 from redis_config import r as redis
 from redis_config import get_slice_task_id_from_redis_with_user_id, get_area_of_interest_cells_with_user_id
+
+@app.route('/rpy2', methods = ['GET'])
+def test_rpy2_with_celery():
+	RPy2Task().delay()
+	return Response()
+
 
 @app.route('/redis_id', methods = ['GET'])
 def assign_client_id():
@@ -26,29 +28,9 @@ def assign_client_id():
 	print(user_id)
 	return jsonify(user_id)
 
-def generate(range_response, range_limit):
-	i = 0
-	while i < range_limit:
-		yield range_response[i].geo
-		i = i + 1
-	print("Stop iterating")
-
 @app.route("/protected_areas", methods = ['GET'])
 def get_protected_areas():
-	range_limit = 3
-	range_response = db.session.query(Range).limit(range_limit).all()	
-	response_generator = generate(range_response, range_limit)
-	#Synchronous: get all the ranges and wrap them into one JSON reponse
-	#json_response = jsonify([range.geo for range in range_response])
-	#return json_response
-
-	#Asynchronous: use a generator to return ranges one at a time
-	try:
-		protected_area = next(response_generator)
-		response = stream_with_context(protected_area)
-		return Response(response, mimetype = 'application/json')
-	except StopIteration:
-		return Response('', mimetype = 'application/json', status = HTTPStatus.NO_CONTENT)
+	return Response(redis.get('protected_areas'), mimetype = 'application/json')
 
 @app.route('/forecast', methods = ['POST'])
 def forecast():
@@ -56,13 +38,22 @@ def forecast():
 	task_id = get_slice_task_id_from_redis_with_user_id(user_id)
 	if task_id != None:
 		result = AbortableAsyncResult(task_id, app=celery)
-		result.abort()
+		print(result.state)
+		if result.state != "SUCCESS":
+			result.abort()
+			#result.revoke() causes errors on the frontend related to abortion
+			#result.forget() prevents receipt of results for the final (proper) request
 	grid_cell_indices = get_area_of_interest_cells_with_user_id(user_id)
 	year_min = request.json['year_min'] - 2020
 	year_max = request.json['year_max'] - 2020
 	async_result = SliceTask.delay(grid_cell_indices, year_min, year_max)
 	redis.set('user:'+str(user_id)+':slice', async_result.id)
-	result = async_result.get() #If this is synchronous, will that prevent us from processing new requests at this route before the first finishes?
+	result = ''
+	try:	#This raises a ton of errors for tasks that get aborted/revoked
+		result = async_result.get() 
+	except Exception as e:
+		print(e)
+	print(len(result))
 	return Response(geojson.dumps(result), mimetype = 'application/json')
 
 @app.route('/area_of_interest', methods = ['POST'])
@@ -90,10 +81,25 @@ def send_rmd_summary():
 	subprocess.run(["r", "render.R"], input=stringify_grid_cells(grid_cell_indices), universal_newlines=True)
 	return send_from_directory("summary", "summary.pdf", as_attachment=True) #Need to ensure this is sending the right file i.e. wait until Rmd is finished writing
 
-def thread_safe_r_compute():
-	with rinterface.openrlib.rlock:
-		rinterface.initr()
-		render = rinterface.baseenv['source']('render.R')
-		grid_cell_indices = rinterface.IntVector([random.randint(0, 100000) for _ in range(100)])
-		render[0](grid_cell_indices)
-		pass
+'''def generate(range_response, range_limit):
+	i = 0
+	while i < range_limit:
+		yield range_response[i].geo
+		i = i + 1
+	print("Stop iterating")
+
+def generate_protected_areas():
+	range_limit = 3
+	range_response = db.session.query(Range).limit(range_limit).all()	
+	response_generator = generate(range_response, range_limit)
+	#Synchronous: get all the ranges and wrap them into one JSON reponse
+	#json_response = jsonify([range.geo for range in range_response])
+	#return json_response
+
+	#Asynchronous: use a generator to return ranges one at a time
+	try:
+		protected_area = next(response_generator)
+		response = stream_with_context(protected_area)
+		return Response(response, mimetype = 'application/json')
+	except StopIteration:
+		return Response('', mimetype = 'application/json', status = HTTPStatus.NO_CONTENT)'''

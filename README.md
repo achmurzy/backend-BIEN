@@ -3,7 +3,8 @@
 INSTALLATION:
 sudo apt-get update
 sudo apt-get install python3-venv python3-pip
-sudo apt-get install python-celery-common redis-server
+sudo apt-get install python-celery-common redis-server 
+sudo apt-get install nginx
 sudo apt-get install libsqlite3-mod-spatialite
 python3 -m venv venv
 source ./venv/bin/activate
@@ -22,7 +23,8 @@ source ./venv/bin/activate
 
 Celery start workers:
 celery -A tasks worker --loglevel=INFO
+waitress-serve --host='127.0.0.1' --port='5000' --call "server:create_app"
 
 Azure set-up:
 ssh -i HDR.test_key.pem achmurzy@104.40.87.231
-sudo rsync -uavz -e "ssh -i HDR.test_key.pem" richness.hdf5 achmurzy@104.40.87.231:~
+sudo rsync -uv --progress -e "ssh -i HDR.test_key.pem" richness.hdf5 achmurzy@104.40.87.231:~
